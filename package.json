@@ -1,0 +1,27 @@
+{
+  "name": "ichat",
+  "version": "1.0.0",
+  "description": "Real-time chat application with focus mode and inner-circle prioritization.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"No automated tests configured\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntare-david/Real-Time-Chat-Application-l4SODA-GROUP-1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ntare-david/Real-Time-Chat-Application-l4SODA-GROUP-1/issues"
+  },
+  "homepage": "https://github.com/ntare-david/Real-Time-Chat-Application-l4SODA-GROUP-1#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}

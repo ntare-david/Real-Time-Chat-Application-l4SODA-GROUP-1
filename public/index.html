@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IChat - Real-Time</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="join-panel" class="panel join-panel">
+        <h1>IChat</h1>
+        <p class="subtitle">Fast, intentional, user-controlled conversation.</p>
+
+        <label for="username-input">Username</label>
+        <input id="username-input" type="text" maxlength="20" placeholder="Enter username" />
+
+        <label for="category-select">Your circle</label>
+        <select id="category-select">
+          <option value="close_friends">Close Friends</option>
+          <option value="friends">Friends</option>
+          <option value="others">Others</option>
+        </select>
+
+        <label for="focus-select">Why are you here?</label>
+        <select id="focus-select">
+          <option value="chat_with_friends">Chat with friends</option>
+          <option value="ask_a_question">Ask a question</option>
+          <option value="just_browsing">Just browsing</option>
+        </select>
+
+        <p id="join-error" class="error"></p>
+        <button id="join-btn">Join Chat</button>
+      </section>
+
+      <section id="chat-panel" class="panel chat-panel hidden">
+        <aside class="sidebar">
+          <header class="sidebar-header">
+            <h2>Chats</h2>
+          </header>
+          <div class="sidebar-search-wrap">
+            <input id="chat-search-input" class="sidebar-search" type="text" placeholder="Search or start a new chat" />
+          </div>
+          <ul id="chat-list" class="chat-list"></ul>
+          <p id="chat-list-empty" class="chat-list-empty">No chats yet. Send or receive a message to start one.</p>
+        </aside>
+
+        <section class="chat-main">
+          <header class="chat-header">
+            <h2 id="room-title">Room Feed</h2>
+            <span id="focus-badge" class="badge"></span>
+          </header>
+
+          <div id="messages" class="messages"></div>
+          <p id="typing-indicator" class="typing-indicator"></p>
+
+          <form id="message-form" class="message-form">
+            <div class="composer-shell">
+              <button id="attach-btn" class="icon-btn" type="button" aria-label="Add attachment">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+              <button id="emoji-btn" class="icon-btn" type="button" aria-label="Emoji">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <circle cx="9" cy="10" r="1.1" />
+                  <circle cx="15" cy="10" r="1.1" />
+                  <path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8" />
+                </svg>
+              </button>
+              <input id="message-input" type="text" placeholder="Type a message" autocomplete="off" />
+              <button id="send-btn" class="icon-btn send-btn" type="submit" aria-label="Send message">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 11.5L20 4l-4.5 16-3.7-5.1L3 11.5z" />
+                </svg>
+              </button>
+            </div>
+            <input id="file-input" type="file" class="hidden" />
+            <button class="icon-btn mic-btn" type="button" aria-label="Voice note">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="4" width="6" height="10" rx="3" />
+                <path d="M6.5 11.5a5.5 5.5 0 0011 0M12 17v3M9 20h6" />
+              </svg>
+            </button>
+          </form>
+          <div id="emoji-picker" class="emoji-picker hidden"></div>
+          <div id="message-context-menu" class="message-context-menu hidden">
+            <button id="context-edit-btn" type="button">Edit</button>
+            <button id="context-delete-btn" type="button">Delete</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="./client.js"></script>
+  </body>
+</html>
