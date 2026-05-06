@@ -1,144 +1,99 @@
-function sanitizeText(value) {
+function sanitize(value) {
   return String(value || "").trim();
 }
 
-function sanitizeAttachment(attachment) {
-  if (!attachment || typeof attachment !== "object") {
-    return null;
-  }
-
-  const name = sanitizeText(attachment.name);
-  const type = sanitizeText(attachment.type);
-  const dataUrl = sanitizeText(attachment.dataUrl);
-
-  if (!name || !type || !dataUrl) {
-    return null;
-  }
-
-  return { name, type, dataUrl };
+function sanitizeAttachment(a) {
+  if (!a || typeof a !== "object") return null;
+  const name = sanitize(a.name), type = sanitize(a.type), dataUrl = sanitize(a.dataUrl);
+  return name && type && dataUrl ? { name, type, dataUrl } : null;
 }
 
-function setupMessageHandlers(io, socket, users, messages) {
-  socket.on("request_messages", () => {
-    socket.emit("messages_history", messages);
-  });
+function broadcast(wss, data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach((c) => c.readyState === c.OPEN && c.send(msg));
+}
 
-  socket.on("send_message", (payload = {}, callback) => {
-    const user = users.get(socket.id);
-    if (!user) {
-      callback?.({ success: false, message: "Please join before messaging." });
-      return;
-    }
+function send(ws, data) {
+  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(data));
+}
 
-    const messageText = sanitizeText(payload.message);
+function setupMessageHandlers(wss, ws, users, messages, payload) {
+  const { event } = payload;
+  const user = users.get(ws);
+
+  if (event === "request_messages") {
+    send(ws, { event: "messages_history", messages });
+  }
+
+  if (event === "send_message") {
+    if (!user) return send(ws, { event: "send_ack", success: false, message: "Please join before messaging." });
+    const message = sanitize(payload.message);
     const attachment = sanitizeAttachment(payload.attachment);
+    const group = sanitize(payload.group);
+    const recipient = sanitize(payload.recipient);
+    if (!message && !attachment) return send(ws, { event: "send_ack", success: false, message: "Message or attachment is required." });
 
-    if (!messageText && !attachment) {
-      callback?.({ success: false, message: "Message or attachment is required." });
-      return;
-    }
-
-    const messageData = {
+    const entry = {
       id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      authorSocketId: socket.id,
       username: user.username,
       category: user.category,
       focusMode: user.focusMode,
-      message: messageText,
+      message,
       attachment,
+      group: group || null,
+      recipient: recipient || null,
       time: new Date().toISOString(),
       updatedAt: null,
-      isQuestion: messageText.includes("?"),
+      isQuestion: message.includes("?"),
     };
+    messages.push(entry);
+    broadcast(wss, { event: "receive_message", ...entry });
+    send(ws, { event: "send_ack", success: true });
+  }
 
-    messages.push(messageData);
-    io.emit("receive_message", messageData);
-    callback?.({ success: true });
-  });
+  if (event === "edit_message") {
+    if (!user) return send(ws, { event: "edit_ack", success: false, message: "Please join before editing." });
+    const messageId = sanitize(payload.messageId);
+    const newText = sanitize(payload.message);
+    if (!messageId || !newText) return send(ws, { event: "edit_ack", success: false, message: "Message text cannot be empty." });
 
-  socket.on("edit_message", (payload = {}, callback) => {
-    const user = users.get(socket.id);
-    if (!user) {
-      callback?.({ success: false, message: "Please join before editing." });
-      return;
-    }
+    const target = messages.find((m) => m.id === messageId);
+    if (!target) return send(ws, { event: "edit_ack", success: false, message: "Message not found." });
+    if (target.username !== user.username) return send(ws, { event: "edit_ack", success: false, message: "You can only edit your own messages." });
+    if (target.attachment) return send(ws, { event: "edit_ack", success: false, message: "Attachment messages cannot be edited." });
 
-    const messageId = sanitizeText(payload.messageId);
-    const newText = sanitizeText(payload.message);
+    target.message = newText;
+    target.isQuestion = newText.includes("?");
+    target.updatedAt = new Date().toISOString();
+    broadcast(wss, { event: "message_updated", ...target });
+    send(ws, { event: "edit_ack", success: true });
+  }
 
-    if (!messageId || !newText) {
-      callback?.({ success: false, message: "Message text cannot be empty." });
-      return;
-    }
+  if (event === "delete_message") {
+    if (!user) return send(ws, { event: "delete_ack", success: false, message: "Please join before deleting." });
+    const messageId = sanitize(payload.messageId);
+    const idx = messages.findIndex((m) => m.id === messageId);
+    if (idx === -1) return send(ws, { event: "delete_ack", success: false, message: "Message not found." });
+    if (messages[idx].username !== user.username) return send(ws, { event: "delete_ack", success: false, message: "You can only delete your own messages." });
 
-    const targetMessage = messages.find((entry) => entry.id === messageId);
-    if (!targetMessage) {
-      callback?.({ success: false, message: "Message not found." });
-      return;
-    }
+    messages.splice(idx, 1);
+    broadcast(wss, { event: "message_deleted", messageId });
+    send(ws, { event: "delete_ack", success: true });
+  }
 
-    if (targetMessage.authorSocketId !== socket.id) {
-      callback?.({ success: false, message: "You can edit only your messages." });
-      return;
-    }
+  if (event === "typing" && user) {
+    wss.clients.forEach((c) => {
+      if (c !== ws && c.readyState === c.OPEN)
+        c.send(JSON.stringify({ event: "typing", username: user.username }));
+    });
+  }
 
-    if (targetMessage.attachment) {
-      callback?.({ success: false, message: "Attachment messages cannot be edited." });
-      return;
-    }
-
-    targetMessage.message = newText;
-    targetMessage.isQuestion = newText.includes("?");
-    targetMessage.updatedAt = new Date().toISOString();
-
-    io.emit("message_updated", targetMessage);
-    callback?.({ success: true });
-  });
-
-  socket.on("delete_message", (payload = {}, callback) => {
-    const user = users.get(socket.id);
-    if (!user) {
-      callback?.({ success: false, message: "Please join before deleting." });
-      return;
-    }
-
-    const messageId = sanitizeText(payload.messageId);
-    const messageIndex = messages.findIndex((entry) => entry.id === messageId);
-
-    if (messageIndex === -1) {
-      callback?.({ success: false, message: "Message not found." });
-      return;
-    }
-
-    const targetMessage = messages[messageIndex];
-    if (targetMessage.authorSocketId !== socket.id) {
-      callback?.({ success: false, message: "You can delete only your messages." });
-      return;
-    }
-
-    messages.splice(messageIndex, 1);
-    io.emit("message_deleted", { messageId });
-    callback?.({ success: true });
-  });
-
-  socket.on("typing", () => {
-    const user = users.get(socket.id);
-    if (!user) {
-      return;
-    }
-
-    socket.broadcast.emit("typing", { username: user.username });
-  });
-
-  socket.on("stop_typing", () => {
-    const user = users.get(socket.id);
-    if (!user) {
-      return;
-    }
-
-    socket.broadcast.emit("stop_typing", { username: user.username });
-  });
+  if (event === "stop_typing" && user) {
+    wss.clients.forEach((c) => {
+      if (c !== ws && c.readyState === c.OPEN)
+        c.send(JSON.stringify({ event: "stop_typing", username: user.username }));
+    });
+  }
 }
 
 module.exports = setupMessageHandlers;
-

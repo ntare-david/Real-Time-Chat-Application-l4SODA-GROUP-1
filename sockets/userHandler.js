@@ -1,79 +1,51 @@
-const ALLOWED_CATEGORIES = new Set(["close_friends", "friends", "others"]);
-const ALLOWED_FOCUS_MODES = new Set([
-  "chat_with_friends",
-  "ask_a_question",
-  "just_browsing",
-]);
+const ALLOWED_CATEGORIES = new Set(["student", "professional", "hobbyist", "other"]);
+const ALLOWED_FOCUS_MODES = new Set(["online", "away", "busy"]);
 
-function sanitizeText(value) {
+function sanitize(value) {
   return String(value || "").trim();
 }
 
-function setupUserHandlers(io, socket, users) {
-  socket.on("join_user", (payload = {}, callback) => {
-    const username = sanitizeText(payload.username);
-    const category = sanitizeText(payload.category);
-    const focusMode = sanitizeText(payload.focusMode);
+function broadcast(wss, data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach((c) => c.readyState === c.OPEN && c.send(msg));
+}
 
-    if (!username) {
-      callback?.({ success: false, message: "Username is required." });
-      return;
-    }
+function send(ws, data) {
+  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(data));
+}
 
-    if (!ALLOWED_CATEGORIES.has(category)) {
-      callback?.({ success: false, message: "Invalid user category." });
-      return;
-    }
+function setupUserHandlers(wss, ws, users, payload) {
+  const { event } = payload;
 
-    if (!ALLOWED_FOCUS_MODES.has(focusMode)) {
-      callback?.({ success: false, message: "Invalid focus mode." });
-      return;
-    }
+  if (event === "join_user") {
+    const username = sanitize(payload.username);
+    const category = sanitize(payload.category);
+    const focusMode = sanitize(payload.focusMode);
 
-    const duplicateUser = Array.from(users.values()).some(
-      (user) => user.username.toLowerCase() === username.toLowerCase()
+    if (!username || username.length > 20) return send(ws, { event: "join_ack", success: false, message: "Username is required (max 20 chars)." });
+    if (!ALLOWED_CATEGORIES.has(category)) return send(ws, { event: "join_ack", success: false, message: "Invalid category." });
+    if (!ALLOWED_FOCUS_MODES.has(focusMode)) return send(ws, { event: "join_ack", success: false, message: "Invalid focus mode." });
+
+    const taken = Array.from(users.values()).some(
+      (u) => u.username.toLowerCase() === username.toLowerCase()
     );
+    if (taken) return send(ws, { event: "join_ack", success: false, message: "Username already taken." });
 
-    if (duplicateUser) {
-      callback?.({ success: false, message: "Username already taken." });
-      return;
-    }
+    users.set(ws, { username, category, focusMode, roomId: null });
+    send(ws, { event: "join_ack", success: true, username, category, focusMode });
+    broadcast(wss, { event: "user_connected", username, category, time: new Date().toISOString() });
+  }
 
-    users.set(socket.id, {
-      socketId: socket.id,
-      username,
-      category,
-      focusMode,
+  if (event === "disconnect") {
+    const user = users.get(ws);
+    if (!user) return;
+    users.delete(ws);
+    broadcast(wss, { event: "user_disconnected", username: user.username, time: new Date().toISOString() });
+    wss.clients.forEach((c) => {
+      if (c.readyState === c.OPEN && c !== ws)
+        c.send(JSON.stringify({ event: "stop_typing", username: user.username }));
     });
-
-    io.emit("online_users", Array.from(users.values()));
-    io.emit("user_connected", {
-      username,
-      category,
-      time: new Date().toISOString(),
-    });
-
-    callback?.({ success: true });
-  });
-
-  socket.on("disconnect", () => {
-    const disconnectedUser = users.get(socket.id);
-    if (!disconnectedUser) {
-      return;
-    }
-
-    users.delete(socket.id);
-    io.emit("online_users", Array.from(users.values()));
-    io.emit("user_disconnected", {
-      username: disconnectedUser.username,
-      category: disconnectedUser.category,
-      time: new Date().toISOString(),
-    });
-    socket.broadcast.emit("stop_typing", {
-      username: disconnectedUser.username,
-    });
-  });
+  }
 }
 
 module.exports = setupUserHandlers;
-

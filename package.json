@@ -21,7 +21,6 @@
   },
   "homepage": "https://github.com/ntare-david/Real-Time-Chat-Application-l4SODA-GROUP-1#readme",
   "dependencies": {
-    "express": "^5.2.1",
-    "socket.io": "^4.8.3"
+    "ws": "^8.20.0"
   }
 }

@@ -3,97 +3,266 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IChat - Real-Time</title>
+    <title>IChat</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="app-shell">
+
+      <!-- ── Login ── -->
       <section id="join-panel" class="panel join-panel">
-        <h1>IChat</h1>
-        <p class="subtitle">Fast, intentional, user-controlled conversation.</p>
+        <div class="join-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <circle cx="9" cy="10" r="1"/>
+            <circle cx="15" cy="10" r="1"/>
+            <path d="M9 14s1 1 3 1 3-1 3-1"/>
+          </svg>
+        </div>
+        <h1>Welcome to IChat</h1>
+        <p class="subtitle">Connect with your community in real-time</p>
 
-        <label for="username-input">Username</label>
-        <input id="username-input" type="text" maxlength="20" placeholder="Enter username" />
+        <div class="join-field">
+          <label for="username-input">Username</label>
+          <input id="username-input" type="text" maxlength="20" placeholder="Choose your username" autocomplete="off" />
+        </div>
 
-        <label for="category-select">Your circle</label>
-        <select id="category-select">
-          <option value="close_friends">Close Friends</option>
-          <option value="friends">Friends</option>
-          <option value="others">Others</option>
-        </select>
+        <div class="join-row">
+          <div class="join-field">
+            <label for="category-select">Role</label>
+            <select id="category-select">
+              <option value="student">Student</option>
+              <option value="professional">Professional</option>
+              <option value="hobbyist">Hobbyist</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="join-field">
+            <label for="focus-select">Status</label>
+            <select id="focus-select">
+              <option value="online">Online</option>
+              <option value="away">Away</option>
+              <option value="busy">Busy</option>
+            </select>
+          </div>
+        </div>
 
-        <label for="focus-select">Why are you here?</label>
-        <select id="focus-select">
-          <option value="chat_with_friends">Chat with friends</option>
-          <option value="ask_a_question">Ask a question</option>
-          <option value="just_browsing">Just browsing</option>
-        </select>
+        <div class="join-checkbox">
+          <input id="remember-me" type="checkbox" />
+          <label for="remember-me">Remember me</label>
+        </div>
 
         <p id="join-error" class="error"></p>
-        <button id="join-btn">Join Chat</button>
+        <button id="join-btn" class="btn-primary">
+          <span>Enter Chat</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        
+        <p class="join-footer">By joining, you agree to our Terms & Privacy Policy</p>
       </section>
 
+      <!-- ── Chat App ── -->
       <section id="chat-panel" class="panel chat-panel hidden">
+
+        <!-- Sidebar -->
         <aside class="sidebar">
           <header class="sidebar-header">
-            <h2>Chats</h2>
+            <div class="sidebar-header-left">
+              <div id="user-avatar" class="user-avatar"></div>
+              <div class="user-info">
+                <span id="user-name-display" class="user-name-display"></span>
+                <span id="focus-badge" class="focus-badge"></span>
+              </div>
+            </div>
+            <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </button>
           </header>
+
           <div class="sidebar-search-wrap">
-            <input id="chat-search-input" class="sidebar-search" type="text" placeholder="Search or start a new chat" />
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input id="chat-search-input" class="sidebar-search" type="text" placeholder="Search…" />
           </div>
-          <ul id="chat-list" class="chat-list"></ul>
-          <p id="chat-list-empty" class="chat-list-empty">No chats yet. Send or receive a message to start one.</p>
+
+          <!-- Tabs -->
+          <div class="sidebar-tabs">
+            <button class="sidebar-tab active" data-tab="groups">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Groups
+            </button>
+            <button class="sidebar-tab" data-tab="dms">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              DMs
+            </button>
+          </div>
+
+          <!-- Groups pane -->
+          <div id="tab-groups" class="tab-pane">
+            <button id="new-group-btn" class="new-group-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              New Group
+            </button>
+            <ul id="group-list" class="chat-list"></ul>
+            <p id="group-list-empty" class="chat-list-empty hidden">No groups found.</p>
+          </div>
+
+          <!-- DMs pane -->
+          <div id="tab-dms" class="tab-pane hidden">
+            <div class="join-field" style="margin-bottom: 0.5rem;">
+              <input id="dm-username-input" type="text" placeholder="Enter username to start DM" autocomplete="off" />
+            </div>
+            <ul id="dm-list" class="chat-list"></ul>
+            <p id="dm-list-empty" class="chat-list-empty">No DMs yet.</p>
+          </div>
         </aside>
 
+        <!-- Chat main -->
         <section class="chat-main">
-          <header class="chat-header">
-            <h2 id="room-title">Room Feed</h2>
-            <span id="focus-badge" class="badge"></span>
-          </header>
 
-          <div id="messages" class="messages"></div>
-          <p id="typing-indicator" class="typing-indicator"></p>
+          <!-- Placeholder -->
+          <div id="chat-placeholder" class="chat-placeholder">
+            <button id="mobile-menu-btn-placeholder" class="mobile-menu-btn" type="button" aria-label="Menu" style="position: absolute; top: 1rem; left: 1rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <p>Select a group or DM to start chatting</p>
+          </div>
 
-          <form id="message-form" class="message-form">
-            <div class="composer-shell">
-              <button id="attach-btn" class="icon-btn" type="button" aria-label="Add attachment">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 5v14M5 12h14" />
+          <!-- Active chat view -->
+          <div id="chat-view" class="chat-view hidden">
+            <header class="chat-header">
+              <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="3" y1="12" x2="21" y2="12"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <line x1="3" y1="18" x2="21" y2="18"/>
                 </svg>
               </button>
-              <button id="emoji-btn" class="icon-btn" type="button" aria-label="Emoji">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" />
-                  <circle cx="9" cy="10" r="1.1" />
-                  <circle cx="15" cy="10" r="1.1" />
-                  <path d="M8.5 14.5c.9 1.2 2.1 1.8 3.5 1.8s2.6-.6 3.5-1.8" />
-                </svg>
-              </button>
-              <input id="message-input" type="text" placeholder="Type a message" autocomplete="off" />
-              <button id="send-btn" class="icon-btn send-btn" type="submit" aria-label="Send message">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M3 11.5L20 4l-4.5 16-3.7-5.1L3 11.5z" />
+              <div class="chat-header-info">
+                <div id="room-avatar" class="room-avatar"></div>
+                <div>
+                  <h2 id="room-title"></h2>
+                  <span id="room-subtitle" class="room-subtitle"></span>
+                </div>
+              </div>
+            </header>
+
+            <div id="messages" class="messages"></div>
+            <p id="typing-indicator" class="typing-indicator"></p>
+
+            <div id="edit-bar" class="edit-bar hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="edit-bar-icon">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              <div class="edit-bar-content">
+                <span class="edit-bar-label">Editing message</span>
+                <p id="edit-bar-preview" class="edit-bar-preview"></p>
+              </div>
+              <button id="edit-cancel-btn" class="icon-btn" type="button" aria-label="Cancel edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18M6 6l12 12"/>
                 </svg>
               </button>
             </div>
-            <input id="file-input" type="file" class="hidden" />
-            <button class="icon-btn mic-btn" type="button" aria-label="Voice note">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="9" y="4" width="6" height="10" rx="3" />
-                <path d="M6.5 11.5a5.5 5.5 0 0011 0M12 17v3M9 20h6" />
-              </svg>
-            </button>
-          </form>
-          <div id="emoji-picker" class="emoji-picker hidden"></div>
-          <div id="message-context-menu" class="message-context-menu hidden">
-            <button id="context-edit-btn" type="button">Edit</button>
-            <button id="context-delete-btn" type="button">Delete</button>
+
+            <form id="message-form" class="message-form">
+              <div class="composer-shell">
+                <button id="attach-btn" class="icon-btn" type="button" aria-label="Attach file">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                  </svg>
+                </button>
+                <button id="emoji-btn" class="icon-btn" type="button" aria-label="Emoji">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                  </svg>
+                </button>
+                <input id="message-input" type="text" placeholder="Type a message…" autocomplete="off" />
+                <button id="send-btn" class="icon-btn send-btn" type="submit" aria-label="Send">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+              </div>
+              <input id="file-input" type="file" class="hidden" />
+              <button id="mic-btn" class="icon-btn mic-btn" type="button" aria-label="Voice note">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+            </form>
+
+            <div id="emoji-picker" class="emoji-picker hidden"></div>
+
+            <div id="message-context-menu" class="message-context-menu hidden">
+              <button id="context-edit-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit
+              </button>
+              <button id="context-delete-btn" type="button" class="danger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+                Delete
+              </button>
+            </div>
           </div>
         </section>
       </section>
-    </main>
 
-    <script src="/socket.io/socket.io.js"></script>
+      <!-- Mobile Overlay -->
+      <div id="mobile-overlay" class="mobile-overlay"></div>
+
+      <!-- ── New Group Modal ── -->
+      <div id="new-group-modal" class="modal-overlay hidden">
+        <div class="modal">
+          <h3>Create a New Group</h3>
+          <div class="join-field">
+            <label for="new-group-name">Group name</label>
+            <input id="new-group-name" type="text" maxlength="40" placeholder="e.g. Study Buddies" autocomplete="off" />
+          </div>
+          <p id="new-group-error" class="error"></p>
+          <div class="modal-actions">
+            <button id="new-group-cancel" class="btn-ghost">Cancel</button>
+            <button id="new-group-submit">Create</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
     <script src="./client.js"></script>
   </body>
 </html>
